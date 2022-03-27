@@ -1,4 +1,4 @@
-package com.foameraserblue;
+package com.foameraserblue.connection;
 
 import java.sql.Connection;
 import java.sql.SQLException;

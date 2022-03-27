@@ -1,14 +1,24 @@
-package com.foameraserblue;
+package com.foameraserblue.dao;
+
+import com.foameraserblue.User;
+import com.foameraserblue.connection.ConnectionMaker;
+import org.springframework.context.annotation.Bean;
 
 import java.sql.*;
 
-import static com.foameraserblue.studyinfo.DB_ID;
-import static com.foameraserblue.studyinfo.DB_PASSWORD;
 
 public class UserDao {
-    private final ConnectionMaker connectionMaker;
+    // ConnectionMaker 를 인터페이스로 선언함으로써 UserDao 와 ConnectionMaker 사이의 결합도를 낮춤
+    private ConnectionMaker connectionMaker;
 
-    public UserDao(ConnectionMaker connectionMaker) {
+//    // 스트레티지 패턴으로 얼마든지 ConnectionMaker 의 구현체를 런타임시에 변경할 수 있음
+//    //생성자를 통한 DI
+//    public UserDao(ConnectionMaker connectionMaker) {
+//        this.connectionMaker = connectionMaker;
+//    }
+
+    // 수정자 메소드를 통한 DI
+    public void setConnectionMaker(ConnectionMaker connectionMaker) {
         this.connectionMaker = connectionMaker;
     }
 
