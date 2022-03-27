@@ -5,7 +5,8 @@ import java.sql.SQLException;
 public class Main {
 
     public static void main(String[] args) throws SQLException, ClassNotFoundException {
-        UserDao dao = new UserDao();
+        ConnectionMaker connectionMaker = new MysqlConnection();
+        UserDao dao = new UserDao(connectionMaker);
 
         User user = new User();
         user.setId("testId2");

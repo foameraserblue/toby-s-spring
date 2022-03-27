@@ -6,14 +6,14 @@ import static com.foameraserblue.studyinfo.DB_ID;
 import static com.foameraserblue.studyinfo.DB_PASSWORD;
 
 public class UserDao {
+    private final ConnectionMaker connectionMaker;
+
+    public UserDao(ConnectionMaker connectionMaker) {
+        this.connectionMaker = connectionMaker;
+    }
 
     public void add(User user) throws ClassNotFoundException, SQLException {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-
-        // db 연결을 위한 커넥션 생성
-        Connection c = DriverManager.getConnection(
-                "jdbc:mysql://localhost/toby_1", DB_ID, DB_PASSWORD
-        );
+        Connection c = connectionMaker.makeConnection();
 
         // sql 을 담을 statement 생성
         PreparedStatement ps = c.prepareStatement(
@@ -32,12 +32,7 @@ public class UserDao {
     }
 
     public User get(String id) throws ClassNotFoundException, SQLException {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-
-        // db 연결을 위한 커넥션 생성
-        Connection c = DriverManager.getConnection(
-                "jdbc:mysql://localhost/toby_1", DB_ID, DB_PASSWORD
-        );
+        Connection c = connectionMaker.makeConnection();
 
         // sql 을 담을 statement 생성
         PreparedStatement ps = c.prepareStatement(
