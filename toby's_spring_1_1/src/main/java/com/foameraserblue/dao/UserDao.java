@@ -4,26 +4,21 @@ import com.foameraserblue.User;
 import com.foameraserblue.connection.ConnectionMaker;
 import org.springframework.context.annotation.Bean;
 
+import javax.sql.DataSource;
 import java.sql.*;
 
 
 public class UserDao {
-    // ConnectionMaker 를 인터페이스로 선언함으로써 UserDao 와 ConnectionMaker 사이의 결합도를 낮춤
-    private ConnectionMaker connectionMaker;
+    private DataSource dataSource;
 
-//    // 스트레티지 패턴으로 얼마든지 ConnectionMaker 의 구현체를 런타임시에 변경할 수 있음
-//    //생성자를 통한 DI
-//    public UserDao(ConnectionMaker connectionMaker) {
-//        this.connectionMaker = connectionMaker;
-//    }
 
     // 수정자 메소드를 통한 DI
-    public void setConnectionMaker(ConnectionMaker connectionMaker) {
-        this.connectionMaker = connectionMaker;
+    public void setConnectionMaker(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     public void add(User user) throws ClassNotFoundException, SQLException {
-        Connection c = connectionMaker.makeConnection();
+        Connection c = dataSource.getConnection();
 
         // sql 을 담을 statement 생성
         PreparedStatement ps = c.prepareStatement(
@@ -42,7 +37,7 @@ public class UserDao {
     }
 
     public User get(String id) throws ClassNotFoundException, SQLException {
-        Connection c = connectionMaker.makeConnection();
+        Connection c = dataSource.getConnection();
 
         // sql 을 담을 statement 생성
         PreparedStatement ps = c.prepareStatement(

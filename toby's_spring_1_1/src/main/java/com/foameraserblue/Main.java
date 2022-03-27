@@ -34,9 +34,6 @@ public class Main {
 
         System.out.println(user2.getId() + "조회 성공");
 
-        CountingConnectionMaker ccm = context.getBean("connectionMaker",CountingConnectionMaker.class);
-        System.out.println(ccm.getCounter());
-
 
     }
 
