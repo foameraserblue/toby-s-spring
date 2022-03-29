@@ -3,6 +3,7 @@ package com.foameraserblue.dao;
 import com.foameraserblue.User;
 import com.foameraserblue.connection.ConnectionMaker;
 import org.springframework.context.annotation.Bean;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -13,11 +14,11 @@ public class UserDao {
 
 
     // 수정자 메소드를 통한 DI
-    public void setConnectionMaker(DataSource dataSource) {
+    public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
-    public void add(User user) throws ClassNotFoundException, SQLException {
+    public void add(User user) throws SQLException {
         Connection c = dataSource.getConnection();
 
         // sql 을 담을 statement 생성
@@ -36,7 +37,7 @@ public class UserDao {
         c.close();
     }
 
-    public User get(String id) throws ClassNotFoundException, SQLException {
+    public User get(String id) throws SQLException {
         Connection c = dataSource.getConnection();
 
         // sql 을 담을 statement 생성
@@ -47,16 +48,53 @@ public class UserDao {
 
         // 만들어진 statement 실행
         ResultSet rs = ps.executeQuery();
-        rs.next();
-        User user = new User();
-        user.setId(rs.getString("id"));
-        user.setName(rs.getString("name"));
-        user.setPassword(rs.getString("password"));
+
+        User user = null;
+        if (rs.next()) {
+            user = new User();
+            user.setId(rs.getString("id"));
+            user.setName(rs.getString("name"));
+            user.setPassword(rs.getString("password"));
+        }
+
         // 사용후 리소스를 닫아준다
         rs.close();
         ps.close();
         c.close();
 
+        if (user == null) throw new EmptyResultDataAccessException(1);
+
         return user;
     }
+
+    // 전체삭제 기능을 담당하는 메서드드
+    public void deleteAll() throws SQLException {
+        Connection c = dataSource.getConnection();
+
+        PreparedStatement ps = c.prepareStatement("delete from users");
+
+        ps.executeUpdate();
+
+        ps.close();
+        c.close();
+    }
+
+    // 테이블 레코드의 갯수를 알려줌
+    public int getCount() throws SQLException {
+        Connection c = dataSource.getConnection();
+
+        PreparedStatement ps = c.prepareStatement("select count(*) from users");
+
+        ResultSet rs = ps.executeQuery();
+        rs.next();
+        int count = rs.getInt(1);
+
+        rs.close();
+        ps.close();
+        c.close();
+
+        return count;
+
+    }
+
 }
