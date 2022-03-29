@@ -69,31 +69,77 @@ public class UserDao {
 
     // 전체삭제 기능을 담당하는 메서드드
     public void deleteAll() throws SQLException {
-        Connection c = dataSource.getConnection();
 
-        PreparedStatement ps = c.prepareStatement("delete from users");
+        Connection c = null;
+        PreparedStatement ps = null;
+        try {
+            c = dataSource.getConnection();
 
-        ps.executeUpdate();
+            ps = c.prepareStatement("delete from users");
 
-        ps.close();
-        c.close();
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (SQLException e) {
+
+                }
+            }
+        }
+
+
     }
 
     // 테이블 레코드의 갯수를 알려줌
     public int getCount() throws SQLException {
-        Connection c = dataSource.getConnection();
 
-        PreparedStatement ps = c.prepareStatement("select count(*) from users");
+        Connection c = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            c = dataSource.getConnection();
 
-        ResultSet rs = ps.executeQuery();
-        rs.next();
-        int count = rs.getInt(1);
+            ps = c.prepareStatement("select count(*) from users");
 
-        rs.close();
-        ps.close();
-        c.close();
+            rs = ps.executeQuery();
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
 
-        return count;
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (SQLException e) {
+
+                }
+            }
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+
+                }
+            }
+        }
+
 
     }
 
