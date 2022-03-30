@@ -25,7 +25,7 @@ public class UserDao {
     }
 
 
-    public void add(User user) throws SQLException {
+    public void add(final User user) throws SQLException {
 
         // 익명 내부클래스 사용
         StatementStrategy strategy = new StatementStrategy() {
@@ -80,15 +80,7 @@ public class UserDao {
     public void deleteAll() throws SQLException {
 
         // 클라이언트의 역할을 하게됨
-        // 익명 내부클래스를 확용해서 딜리트 작업시에만 사용하는 클래스로 사용
-        StatementStrategy strategy = new StatementStrategy() {
-            @Override
-            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
-                PreparedStatement ps = c.prepareStatement("delete from users");
-                return ps;
-            }
-        };
-        jdbcContext.workWithStatementStrategy(strategy);
+        jdbcContext.executeSql("delete from users");
 
 
     }
@@ -165,5 +157,6 @@ public class UserDao {
 //            }
 //        }
 //    }
+
 
 }

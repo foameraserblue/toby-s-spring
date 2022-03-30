@@ -43,4 +43,17 @@ public class JdbcContext {
             }
         }
     }
+
+    // 단순 쿼리를 실행하는 메소드
+    public void executeSql(final String query) throws SQLException {
+        // 익명클래스를 사용하여 파라미터를 메소드단위로 DI 한다
+        workWithStatementStrategy(
+                new StatementStrategy() {
+                    @Override
+                    public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+                        return c.prepareStatement(query);
+                    }
+                }
+        );
+    }
 }
