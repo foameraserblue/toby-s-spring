@@ -8,6 +8,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 // jdbc 컨텍스트를 분리한 클래스
+// 스프링에 더 강력한 JDBCTemplate 이 있기때문에
+// 이친구는... 안녕~~!!!
 public class JdbcContext {
     private DataSource dataSource;
 
