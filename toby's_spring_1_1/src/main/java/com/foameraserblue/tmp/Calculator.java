@@ -10,7 +10,7 @@ public class Calculator {
     public Integer calcSum(String filePath) throws IOException {
 
         // 콜백 객체를 익명 내부 객체를 통해 생성하여 전달한다.
-        LineCallback sumCallback = new LineCallback() {
+        LineCallback<Integer> sumCallback = new LineCallback<Integer>() {
             @Override
             public Integer doSomethingWithLine(String line, Integer value) {
                 return Integer.parseInt(line) + value;
@@ -21,7 +21,7 @@ public class Calculator {
     }
 
     public Integer calcMultiply(String filePath) throws IOException {
-        LineCallback multiplyCallback = new LineCallback() {
+        LineCallback<Integer> multiplyCallback = new LineCallback<Integer>() {
             @Override
             public Integer doSomethingWithLine(String line, Integer value) {
                 return Integer.parseInt(line) * value;
@@ -29,6 +29,17 @@ public class Calculator {
         };
 
         return lineReadTemplate(filePath, multiplyCallback, 1);
+    }
+
+    // 문자열을 길게 만들어 반환한다.
+    public String concatenate(String filePath) throws IOException {
+        LineCallback<String> concatenateCallback = new LineCallback<String>() {
+            @Override
+            public String doSomethingWithLine(String line, String value) {
+                return line + value;
+            }
+        };
+        return lineReadTemplate(filePath, concatenateCallback, "");
     }
 
     // 버퍼 리더를 만들고 콜백에 전달해주는 구조적인 일을 하는 템플릿
@@ -54,11 +65,11 @@ public class Calculator {
     }
 
     // 라인을 이용하는 콜백을 사용하는 템플릿
-    public Integer lineReadTemplate(String filePath, LineCallback callback, int initValue) throws IOException {
+    public <T> T lineReadTemplate(String filePath, LineCallback<T> callback, T initValue) throws IOException {
         BufferedReader br = null;
         try {
             br = new BufferedReader(new FileReader(filePath));
-            int res = initValue;
+            T res = initValue;
             String line = null;
 
             while ((line = br.readLine()) != null) {

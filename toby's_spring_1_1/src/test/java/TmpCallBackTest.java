@@ -31,4 +31,11 @@ public class TmpCallBackTest {
         Assert.assertEquals(multiply, 24);
 
     }
+
+    @Test
+    public void concatenateStrings() throws IOException {
+
+        String result = calculator.concatenate(filePath);
+        Assert.assertEquals(result, "1234");
+    }
 }
