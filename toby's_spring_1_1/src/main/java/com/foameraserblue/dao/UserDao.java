@@ -16,14 +16,14 @@ public class UserDao {
 
 
     // 수정자 메소드를 통한 DI
+    // JdbcContext 는 강결합 될 수밖에 없는 구체적인 클래스이기때문에
+    // 빈으로 등록하지 않고 직접 수동 생성하여 사용하는 방법도 있다.
     public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
+        this.jdbcContext = new JdbcContext(dataSource);
+
     }
 
-    // 수정자 메소드를 통한 DI
-    public void setJdbcContext(JdbcContext jdbcContext) {
-        this.jdbcContext = jdbcContext;
-    }
 
     public void add(User user) throws SQLException {
 

@@ -26,7 +26,7 @@ public class DaoFactory {
     public UserDao userDao() {
         UserDao userDao = new UserDao();
         userDao.setDataSource(dataSource());
-        userDao.setJdbcContext(jdbcContext());
+
         return userDao;
     }
 
@@ -53,11 +53,6 @@ public class DaoFactory {
     @Bean
     public ConnectionMaker realConnectionMaker() {
         return new MysqlConnection();
-    }
-
-    @Bean
-    public JdbcContext jdbcContext() {
-        return new JdbcContext(dataSource());
     }
 
 
