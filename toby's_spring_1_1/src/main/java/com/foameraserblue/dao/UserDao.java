@@ -1,8 +1,9 @@
 package com.foameraserblue.dao;
 
 import com.foameraserblue.User;
-import com.foameraserblue.connection.ConnectionMaker;
-import org.springframework.context.annotation.Bean;
+import com.foameraserblue.dao.strategy.AddStatement;
+import com.foameraserblue.dao.strategy.DeleteAllStatement;
+import com.foameraserblue.dao.strategy.StatementStrategy;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import javax.sql.DataSource;
@@ -21,20 +22,9 @@ public class UserDao {
     public void add(User user) throws SQLException {
         Connection c = dataSource.getConnection();
 
-        // sql 을 담을 statement 생성
-        PreparedStatement ps = c.prepareStatement(
-                "insert into users(id,name,password) values(?,?,?)"
-        );
-        ps.setString(1, user.getId());
-        ps.setString(2, user.getName());
-        ps.setString(3, user.getPassword());
+        StatementStrategy strategy = new AddStatement(user);
+        jdbcContextWithStatementStrategy(strategy);
 
-        // 만들어진 statement 실행
-        ps.executeUpdate();
-
-        // 사용후 리소스를 닫아준다
-        ps.close();
-        c.close();
     }
 
     public User get(String id) throws SQLException {
@@ -67,35 +57,14 @@ public class UserDao {
         return user;
     }
 
-    // 전체삭제 기능을 담당하는 메서드드
+    // 전체삭제 기능을 담당하는 메서드
     public void deleteAll() throws SQLException {
 
-        Connection c = null;
-        PreparedStatement ps = null;
-        try {
-            c = dataSource.getConnection();
-            StatementStrategy strategy = new DeleteAllStatement();
-            ps = strategy.makePreparedStatement(c);
-
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            if (ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-
-                }
-            }
-            if (c != null) {
-                try {
-                    c.close();
-                } catch (SQLException e) {
-
-                }
-            }
-        }
+        // 전략패턴에서 컨텍스트에 해당하는 부분을 따로 메서드로 독립시킴
+        // jdbcContextWithStatementStrategy 메서드(컨텍스트) 에게 구체적인 전략을 전달하는는
+        // 클라이언트의 역할을 하게됨
+        StatementStrategy strategy = new DeleteAllStatement();
+        jdbcContextWithStatementStrategy(strategy);
 
 
     }
@@ -141,6 +110,36 @@ public class UserDao {
         }
 
 
+    }
+
+    // 스트레티지 패턴에서 컨텍스트에 해당하는 부분을 별도의 메서드로 독립시켰다.
+    public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
+        Connection c = null;
+        PreparedStatement ps = null;
+        try {
+            c = dataSource.getConnection();
+
+            ps = stmt.makePreparedStatement(c);
+
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (SQLException e) {
+
+                }
+            }
+        }
     }
 
 }

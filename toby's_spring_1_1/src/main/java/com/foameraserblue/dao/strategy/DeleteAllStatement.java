@@ -1,4 +1,4 @@
-package com.foameraserblue.dao;
+package com.foameraserblue.dao.strategy;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
