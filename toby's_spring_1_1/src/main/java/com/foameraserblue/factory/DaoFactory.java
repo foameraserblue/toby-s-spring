@@ -5,6 +5,7 @@ import com.foameraserblue.connection.ConnectionMaker;
 import com.foameraserblue.connection.CountingConnectionMaker;
 import com.foameraserblue.connection.MysqlConnection;
 import com.foameraserblue.dao.AccountDao;
+import com.foameraserblue.dao.JdbcContext;
 import com.foameraserblue.dao.UserDao;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,7 @@ public class DaoFactory {
     public UserDao userDao() {
         UserDao userDao = new UserDao();
         userDao.setDataSource(dataSource());
+        userDao.setJdbcContext(jdbcContext());
         return userDao;
     }
 
@@ -52,4 +54,11 @@ public class DaoFactory {
     public ConnectionMaker realConnectionMaker() {
         return new MysqlConnection();
     }
+
+    @Bean
+    public JdbcContext jdbcContext() {
+        return new JdbcContext(dataSource());
+    }
+
+
 }

@@ -12,6 +12,7 @@ import java.sql.*;
 
 public class UserDao {
     private DataSource dataSource;
+    private JdbcContext jdbcContext;
 
 
     // 수정자 메소드를 통한 DI
@@ -19,11 +20,29 @@ public class UserDao {
         this.dataSource = dataSource;
     }
 
-    public void add(User user) throws SQLException {
-        Connection c = dataSource.getConnection();
+    // 수정자 메소드를 통한 DI
+    public void setJdbcContext(JdbcContext jdbcContext) {
+        this.jdbcContext = jdbcContext;
+    }
 
-        StatementStrategy strategy = new AddStatement(user);
-        jdbcContextWithStatementStrategy(strategy);
+    public void add(User user) throws SQLException {
+
+        // 익명 내부클래스 사용
+        StatementStrategy strategy = new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+                // sql 을 담을 statement 생성
+                PreparedStatement ps = c.prepareStatement(
+                        "insert into users(id,name,password) values(?,?,?)"
+                );
+                ps.setString(1, user.getId());
+                ps.setString(2, user.getName());
+                ps.setString(3, user.getPassword());
+
+                return ps;
+            }
+        };
+        jdbcContext.workWithStatementStrategy(strategy);
 
     }
 
@@ -60,11 +79,16 @@ public class UserDao {
     // 전체삭제 기능을 담당하는 메서드
     public void deleteAll() throws SQLException {
 
-        // 전략패턴에서 컨텍스트에 해당하는 부분을 따로 메서드로 독립시킴
-        // jdbcContextWithStatementStrategy 메서드(컨텍스트) 에게 구체적인 전략을 전달하는는
         // 클라이언트의 역할을 하게됨
-        StatementStrategy strategy = new DeleteAllStatement();
-        jdbcContextWithStatementStrategy(strategy);
+        // 익명 내부클래스를 확용해서 딜리트 작업시에만 사용하는 클래스로 사용
+        StatementStrategy strategy = new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+                PreparedStatement ps = c.prepareStatement("delete from users");
+                return ps;
+            }
+        };
+        jdbcContext.workWithStatementStrategy(strategy);
 
 
     }
@@ -113,33 +137,33 @@ public class UserDao {
     }
 
     // 스트레티지 패턴에서 컨텍스트에 해당하는 부분을 별도의 메서드로 독립시켰다.
-    public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
-        Connection c = null;
-        PreparedStatement ps = null;
-        try {
-            c = dataSource.getConnection();
-
-            ps = stmt.makePreparedStatement(c);
-
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            if (ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-
-                }
-            }
-            if (c != null) {
-                try {
-                    c.close();
-                } catch (SQLException e) {
-
-                }
-            }
-        }
-    }
+//    public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
+//        Connection c = null;
+//        PreparedStatement ps = null;
+//        try {
+//            c = dataSource.getConnection();
+//
+//            ps = stmt.makePreparedStatement(c);
+//
+//            ps.executeUpdate();
+//        } catch (SQLException e) {
+//            throw e;
+//        } finally {
+//            if (ps != null) {
+//                try {
+//                    ps.close();
+//                } catch (SQLException e) {
+//
+//                }
+//            }
+//            if (c != null) {
+//                try {
+//                    c.close();
+//                } catch (SQLException e) {
+//
+//                }
+//            }
+//        }
+//    }
 
 }
