@@ -1,12 +1,8 @@
 package com.foameraserblue.factory;
 
-import com.foameraserblue.User;
 import com.foameraserblue.connection.ConnectionMaker;
-import com.foameraserblue.connection.CountingConnectionMaker;
 import com.foameraserblue.connection.MysqlConnection;
-import com.foameraserblue.dao.AccountDao;
-import com.foameraserblue.dao.JdbcContext;
-import com.foameraserblue.dao.UserDao;
+import com.foameraserblue.dao.UserDaoJdbc;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -23,11 +19,11 @@ import static com.foameraserblue.studyinfo.DB_PASSWORD;
 public class DaoFactory {
     // UserDao 를 생성하는 책임
     @Bean
-    public UserDao userDao() {
-        UserDao userDao = new UserDao();
-        userDao.setJdbcTemplate(dataSource());
+    public UserDaoJdbc userDao() {
+        UserDaoJdbc userDaoJdbc = new UserDaoJdbc();
+        userDaoJdbc.setJdbcTemplate(dataSource());
 
-        return userDao;
+        return userDaoJdbc;
     }
 
 //    // AccountDao 를 생성하는 책임
