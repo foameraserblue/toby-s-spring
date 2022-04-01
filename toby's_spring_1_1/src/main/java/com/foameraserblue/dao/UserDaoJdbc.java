@@ -1,5 +1,6 @@
 package com.foameraserblue.dao;
 
+import com.foameraserblue.Level;
 import com.foameraserblue.User;
 import com.foameraserblue.dao.strategy.AddStatement;
 import com.foameraserblue.dao.strategy.DeleteAllStatement;
@@ -14,9 +15,23 @@ import java.sql.*;
 import java.util.List;
 
 
-public class UserDaoJdbc implements UserDao{
+public class UserDaoJdbc implements UserDao {
 
     private JdbcTemplate jdbcTemplate;
+
+    private RowMapper<User> userMapper =
+            new RowMapper<User>() {
+                public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    User user = new User();
+                    user.setId(rs.getString("id"));
+                    user.setName(rs.getString("name"));
+                    user.setPassword(rs.getString("password"));
+                    user.setLevel(Level.valueOf(rs.getInt("level")));
+                    user.setLogin(rs.getInt("login"));
+                    user.setRecommend(rs.getInt("recommend"));
+                    return user;
+                }
+            };
 
 
     // 수정자 메소드를 통한 DI
@@ -28,8 +43,8 @@ public class UserDaoJdbc implements UserDao{
 
     public void add(final User user) {
 
-        this.jdbcTemplate.update("insert into users(id,name,password) value(?,?,?)",
-                user.getId(), user.getName(), user.getPassword());
+        this.jdbcTemplate.update("insert into users(id,name,password,level,login,recommend) value(?,?,?,?,?,?)",
+                user.getId(), user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(), user.getRecommend());
 
     }
 
@@ -43,6 +58,10 @@ public class UserDaoJdbc implements UserDao{
                         user.setId(resultSet.getString("id"));
                         user.setName(resultSet.getString("name"));
                         user.setPassword(resultSet.getString("password"));
+                        user.setLevel(Level.valueOf(resultSet.getInt("level")));
+                        user.setLogin(resultSet.getInt("login"));
+                        user.setRecommend(resultSet.getInt("recommend"));
+
                         return user;
                     }
                 });
@@ -51,7 +70,7 @@ public class UserDaoJdbc implements UserDao{
 
     @Override
     public List<User> getAll() {
-        return null;
+        return this.jdbcTemplate.query("select * from users order by id", this.userMapper);
     }
 
     // 전체삭제 기능을 담당하는 메서드
@@ -68,6 +87,15 @@ public class UserDaoJdbc implements UserDao{
         return this.jdbcTemplate.queryForInt("select count(*) from users");
 
 
+    }
+
+    @Override
+    public void update(User user) {
+        this.jdbcTemplate.update(
+                "update users set name = ?, password = ?, level = ?, login = ?, recommend = ? " +
+                        "where id = ?", user.getName(), user.getPassword(),
+                user.getLevel().intValue(), user.getLogin(), user.getRecommend(), user.getId()
+        );
     }
 
     // 스트레티지 패턴에서 컨텍스트에 해당하는 부분을 별도의 메서드로 독립시켰다.
