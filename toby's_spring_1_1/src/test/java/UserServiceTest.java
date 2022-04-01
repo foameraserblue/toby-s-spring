@@ -3,23 +3,29 @@ import com.foameraserblue.domain.User;
 import com.foameraserblue.dao.UserDao;
 import com.foameraserblue.factory.BeansFactory;
 import com.foameraserblue.service.UserService;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
+import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
 import static com.foameraserblue.service.UserService.MIN_LOGCOUNT_FOR_SILVER;
 import static com.foameraserblue.service.UserService.MIN_RECCOMEND_FOR_GOLD;
+import static junit.framework.Assert.fail;
 
 public class UserServiceTest {
 
     UserService userService;
     UserDao userDao;
+    DataSource dataSource;
     private static ApplicationContext context;
 
     List<User> users;
@@ -34,6 +40,7 @@ public class UserServiceTest {
     public void setUp() {
         userService = context.getBean("userService", UserService.class);
         userDao = context.getBean("userDao", UserDao.class);
+        dataSource = context.getBean("dataSource", DataSource.class);
 
         users = Arrays.asList(
                 new User("1번아디", "1번이름", "1ps", Level.BASIC, MIN_LOGCOUNT_FOR_SILVER - 1, 0),
@@ -44,8 +51,34 @@ public class UserServiceTest {
         );
     }
 
+    // 테스트를 위한 가짜객체
+    static class TestUserService extends UserService {
+        private String id; // 예외를 발생시킬 인덱스
+
+        public TestUserService(UserDao userDao, String id) {
+            super(userDao);
+            this.id = id;
+        }
+
+        @Override
+        public void setDataSource(DataSource dataSource) {
+            super.setDataSource(dataSource);
+        }
+
+        @Override
+        protected void upgradeLevel(User user) {
+            if (user.getId().equals(this.id)) throw new TestUserServiceException();
+            super.upgradeLevel(user);
+        }
+    }
+
+    // 테스트를 위한 가짜 exception
+    public static class TestUserServiceException extends RuntimeException {
+    }
+
+
     @Test
-    public void upgradeLevels() {
+    public void upgradeLevels() throws SQLException {
         userDao.deleteAll();
         for (User user : users) userDao.add(user);
 
@@ -78,6 +111,25 @@ public class UserServiceTest {
         Assert.assertEquals(userWithLevel.getLevel(), userWithLevelRead.getLevel());
         Assert.assertEquals(userWithoutLevel.getLevel(), userWithoutLevelRead.getLevel());
     }
+
+    @Test
+    public void upgradeAllOrNothing() {
+        UserService testUserService = new TestUserService(userDao, users.get(3).getId());
+        testUserService.setDataSource(dataSource);
+
+        userDao.deleteAll();
+        for (User user : users) userDao.add(user);
+
+        try {
+            testUserService.upgradeLevels();
+            fail("TestUserServiceException expected");
+        } catch (TestUserServiceException | SQLException e) {
+
+        }
+
+        checkLevelUpgraded(users.get(1), false);
+    }
+
 
     private void checkLevel(User user, Level expectedLevel) {
         User userUpdate = userDao.get(user.getId());

@@ -38,7 +38,7 @@ public class BeansFactory {
     public DataSource dataSource() {
         SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
 
-        dataSource.setDriverClass(com.mysql.jdbc.Driver.class);
+        dataSource.setDriverClass(com.mysql.cj.jdbc.Driver.class);
         dataSource.setUrl("jdbc:mysql://localhost/toby_1");
         dataSource.setUsername(DB_ID);
         dataSource.setPassword(DB_PASSWORD);
@@ -53,8 +53,11 @@ public class BeansFactory {
     }
 
     @Bean
-    public UserService userService(){
-        return new UserService(userDao());
+    public UserService userService() {
+        UserService userService = new UserService(userDao());
+        userService.setDataSource(dataSource());
+
+        return userService;
     }
 
 
