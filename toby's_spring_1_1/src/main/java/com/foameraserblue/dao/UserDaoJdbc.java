@@ -1,13 +1,8 @@
 package com.foameraserblue.dao;
 
-import com.foameraserblue.Level;
-import com.foameraserblue.User;
-import com.foameraserblue.dao.strategy.AddStatement;
-import com.foameraserblue.dao.strategy.DeleteAllStatement;
-import com.foameraserblue.dao.strategy.StatementStrategy;
-import org.springframework.dao.EmptyResultDataAccessException;
+import com.foameraserblue.domain.Level;
+import com.foameraserblue.domain.User;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
 
 import javax.sql.DataSource;

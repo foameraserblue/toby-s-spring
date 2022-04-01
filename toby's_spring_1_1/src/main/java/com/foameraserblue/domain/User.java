@@ -1,4 +1,4 @@
-package com.foameraserblue;
+package com.foameraserblue.domain;
 
 public class User {
     private String id;
@@ -9,11 +9,6 @@ public class User {
     private int login;
     private int recommend;
 
-    public User(String id, String name, String password) {
-        this.id = id;
-        this.name = name;
-        this.password = password;
-    }
 
     public User(String id, String name, String password, Level level, int login, int recommend) {
         this.id = id;
@@ -26,6 +21,13 @@ public class User {
 
     public User() {
 
+    }
+
+    public void upgradeLevel() {
+        Level nextLevel = this.level.nextLevel();
+
+        if (nextLevel == null) throw new IllegalStateException(this.level + "은 업그레이드가 불가능합니다.");
+        else this.level = nextLevel;
     }
 
     public void setId(String id) {

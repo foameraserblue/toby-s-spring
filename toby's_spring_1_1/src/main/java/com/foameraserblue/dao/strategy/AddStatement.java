@@ -1,6 +1,6 @@
 package com.foameraserblue.dao.strategy;
 
-import com.foameraserblue.User;
+import com.foameraserblue.domain.User;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

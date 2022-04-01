@@ -1,5 +1,5 @@
-import com.foameraserblue.Level;
-import com.foameraserblue.User;
+import com.foameraserblue.domain.Level;
+import com.foameraserblue.domain.User;
 import com.foameraserblue.dao.UserDao;
 import com.foameraserblue.dao.UserDaoJdbc;
 import com.foameraserblue.factory.BeansFactory;

@@ -1,6 +1,6 @@
 package com.foameraserblue.dao;
 
-import com.foameraserblue.User;
+import com.foameraserblue.domain.User;
 
 import java.util.List;
 
