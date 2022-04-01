@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -55,14 +56,9 @@ public class UserServiceTest {
     static class TestUserService extends UserService {
         private String id; // 예외를 발생시킬 인덱스
 
-        public TestUserService(UserDao userDao, String id) {
-            super(userDao);
+        public TestUserService(UserDao userDao, PlatformTransactionManager transactionManager, String id) {
+            super(userDao, transactionManager);
             this.id = id;
-        }
-
-        @Override
-        public void setDataSource(DataSource dataSource) {
-            super.setDataSource(dataSource);
         }
 
         @Override
@@ -114,8 +110,9 @@ public class UserServiceTest {
 
     @Test
     public void upgradeAllOrNothing() {
-        UserService testUserService = new TestUserService(userDao, users.get(3).getId());
-        testUserService.setDataSource(dataSource);
+        UserService testUserService = new TestUserService(userDao, context.getBean(
+                "transactionManager", PlatformTransactionManager.class), users.get(3).getId());
+
 
         userDao.deleteAll();
         for (User user : users) userDao.add(user);

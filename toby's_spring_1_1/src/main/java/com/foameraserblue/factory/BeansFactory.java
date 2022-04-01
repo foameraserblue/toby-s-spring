@@ -6,7 +6,9 @@ import com.foameraserblue.dao.UserDaoJdbc;
 import com.foameraserblue.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 
@@ -53,11 +55,14 @@ public class BeansFactory {
     }
 
     @Bean
-    public UserService userService() {
-        UserService userService = new UserService(userDao());
-        userService.setDataSource(dataSource());
+    public PlatformTransactionManager transactionManager() {
+        return new DataSourceTransactionManager(dataSource());
+    }
 
-        return userService;
+    @Bean
+    public UserService userService() {
+
+        return new UserService(userDao(), transactionManager());
     }
 
 

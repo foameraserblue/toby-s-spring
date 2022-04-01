@@ -3,7 +3,11 @@ package com.foameraserblue.service;
 import com.foameraserblue.domain.Level;
 import com.foameraserblue.domain.User;
 import com.foameraserblue.dao.UserDao;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.sql.DataSource;
@@ -14,27 +18,26 @@ import java.util.List;
 
 public class UserService {
     UserDao userDao;
-    DataSource dataSource;
+
+    PlatformTransactionManager transactionManager;
 
     public static final int MIN_LOGCOUNT_FOR_SILVER = 50;
     public static final int MIN_RECCOMEND_FOR_GOLD = 30;
 
 
-    public UserService(UserDao userDao) {
+    public UserService(UserDao userDao,PlatformTransactionManager transactionManager) {
+
         this.userDao = userDao;
+        this.transactionManager = transactionManager;
     }
 
-    public void setDataSource(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
+
 
     // 사용자 레벨 업그레이드 메소드
     public void upgradeLevels() throws SQLException {
-        // 트랜잭션 동기화작업 초기화
-        TransactionSynchronizationManager.initSynchronization();
-        // db 커넥션을 생성하고 트랜잭션 시작, 이후의 작업은 모두 이 트랜잭션 내에서 시작한다
-        Connection c = DataSourceUtils.getConnection(dataSource);
-        c.setAutoCommit(false);
+
+        // 트랜잭션 시작
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         try {
             List<User> users = userDao.getAll();
@@ -45,17 +48,11 @@ public class UserService {
                 }
             }
             // 모든 작업이 정상적으로 실행됐을경우 트랜잭션을 커밋한다
-            c.commit();
+            transactionManager.commit(status);
         } catch (Exception e) {
             // 예외가 발생시 롤백한다.
-            c.rollback();
+            transactionManager.rollback(status);
             throw e;
-        } finally {
-            // 데이터소스 유틸을 이용해 안전하게 db 커넥션을 닫는다
-            DataSourceUtils.releaseConnection(c, dataSource);
-            // 동기화작업 종료 및 마무리
-            TransactionSynchronizationManager.unbindResource(this.dataSource);
-            TransactionSynchronizationManager.clearSynchronization();
         }
     }
 
