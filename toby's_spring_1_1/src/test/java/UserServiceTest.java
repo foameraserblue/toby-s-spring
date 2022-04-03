@@ -2,6 +2,8 @@ import com.foameraserblue.dao.UserDao;
 import com.foameraserblue.domain.Level;
 import com.foameraserblue.domain.User;
 import com.foameraserblue.service.UserService;
+import com.foameraserblue.service.UserServiceImpl;
+import com.foameraserblue.service.UserServiceTx;
 import mock.MockMailSender;
 import org.junit.Assert;
 import org.junit.Before;
@@ -19,14 +21,15 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.foameraserblue.service.UserService.MIN_LOGCOUNT_FOR_SILVER;
-import static com.foameraserblue.service.UserService.MIN_RECCOMEND_FOR_GOLD;
+import static com.foameraserblue.service.UserServiceImpl.MIN_LOGCOUNT_FOR_SILVER;
+import static com.foameraserblue.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.fail;
 
 public class UserServiceTest {
 
     UserService userService;
+    UserServiceImpl userServiceImpl;
     UserDao userDao;
     DataSource dataSource;
     private static ApplicationContext context;
@@ -42,6 +45,7 @@ public class UserServiceTest {
     @Before
     public void setUp() {
         userService = context.getBean("userService", UserService.class);
+        userServiceImpl = context.getBean("userServiceImpl", UserServiceImpl.class);
         userDao = context.getBean("userDao", UserDao.class);
         dataSource = context.getBean("dataSource", DataSource.class);
 
@@ -55,11 +59,11 @@ public class UserServiceTest {
     }
 
     // 테스트를 위한 가짜객체
-    static class TestUserService extends UserService {
+    static class TestUserService extends UserServiceImpl {
         private String id; // 예외를 발생시킬 인덱스
 
-        public TestUserService(UserDao userDao, PlatformTransactionManager transactionManager, MailSender mailSender, String id) {
-            super(userDao, transactionManager, mailSender);
+        public TestUserService(UserDao userDao, MailSender mailSender, String id) {
+            super(userDao, mailSender);
             this.id = id;
         }
 
@@ -83,7 +87,7 @@ public class UserServiceTest {
 
         // 필요한 mock 객체로 di 객체를 변경해준다
         MockMailSender mockMailSender = new MockMailSender();
-        userService.setMailSender(mockMailSender);
+        userServiceImpl.setMailSender(mockMailSender);
 
 
         userService.upgradeLevels();
@@ -122,15 +126,16 @@ public class UserServiceTest {
 
     @Test
     public void upgradeAllOrNothing() {
-        UserService testUserService = new TestUserService(userDao, context.getBean(
-                "transactionManager", PlatformTransactionManager.class), context.getBean("mailSender", MailSender.class), users.get(3).getId());
+        UserService testUserService = new TestUserService(userDao, context.getBean("mailSender", MailSender.class), users.get(3).getId());
+
+        UserServiceTx userServiceTx = new UserServiceTx(testUserService, context.getBean("transactionManager", PlatformTransactionManager.class));
 
 
         userDao.deleteAll();
         for (User user : users) userDao.add(user);
 
         try {
-            testUserService.upgradeLevels();
+            userServiceTx.upgradeLevels();
             fail("TestUserServiceException expected");
         } catch (TestUserServiceException | SQLException e) {
 

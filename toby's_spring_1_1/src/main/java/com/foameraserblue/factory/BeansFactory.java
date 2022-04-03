@@ -4,6 +4,8 @@ import com.foameraserblue.connection.ConnectionMaker;
 import com.foameraserblue.connection.MysqlConnection;
 import com.foameraserblue.dao.UserDaoJdbc;
 import com.foameraserblue.service.UserService;
+import com.foameraserblue.service.UserServiceImpl;
+import com.foameraserblue.service.UserServiceTx;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -62,9 +64,14 @@ public class BeansFactory {
     }
 
     @Bean
-    public UserService userService() {
+    public UserService userServiceImpl() {
 
-        return new UserService(userDao(), transactionManager(), mailSender());
+        return new UserServiceImpl(userDao(), mailSender());
+    }
+
+    @Bean
+    public UserService userService(){
+        return new UserServiceTx(userServiceImpl(),transactionManager());
     }
 
     @Bean
