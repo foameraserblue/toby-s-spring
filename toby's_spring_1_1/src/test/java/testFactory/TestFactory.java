@@ -1,15 +1,15 @@
-package com.foameraserblue.factory;
+package testFactory;
 
 import com.foameraserblue.connection.ConnectionMaker;
 import com.foameraserblue.connection.MysqlConnection;
 import com.foameraserblue.dao.UserDaoJdbc;
 import com.foameraserblue.service.UserService;
+import mock.DummyMailSender;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.mail.MailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
@@ -17,11 +17,8 @@ import javax.sql.DataSource;
 import static com.foameraserblue.studyinfo.DB_ID;
 import static com.foameraserblue.studyinfo.DB_PASSWORD;
 
-// 구조를 결정하는 오브젝트
-// 오브젝트의 생성과 관계설정에 대해 제어권한을 갖고있는 특별한 오브젝트의 개념
-// IOC 가 적용되었다 볼 수 있음
 @Configuration
-public class BeansFactory {
+public class TestFactory {
     // UserDao 를 생성하는 책임
     @Bean
     public UserDaoJdbc userDao() {
@@ -69,10 +66,6 @@ public class BeansFactory {
 
     @Bean
     public MailSender mailSender() {
-        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost("mail.server.com");
-        return mailSender;
+        return new DummyMailSender();
     }
-
-
 }

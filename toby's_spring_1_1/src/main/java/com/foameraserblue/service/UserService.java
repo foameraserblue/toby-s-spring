@@ -1,17 +1,14 @@
 package com.foameraserblue.service;
 
+import com.foameraserblue.dao.UserDao;
 import com.foameraserblue.domain.Level;
 import com.foameraserblue.domain.User;
-import com.foameraserblue.dao.UserDao;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -19,19 +16,25 @@ import java.util.List;
 public class UserService {
     UserDao userDao;
 
+    // 서비스 추상화된 인터페이스의 구체적인 객체를 DI 를 통해 주입받는다.
     PlatformTransactionManager transactionManager;
+    MailSender mailSender;
 
     public static final int MIN_LOGCOUNT_FOR_SILVER = 50;
     public static final int MIN_RECCOMEND_FOR_GOLD = 30;
 
 
-    public UserService(UserDao userDao,PlatformTransactionManager transactionManager) {
+    public UserService(UserDao userDao, PlatformTransactionManager transactionManager, MailSender mailSender) {
 
         this.userDao = userDao;
         this.transactionManager = transactionManager;
+        this.mailSender = mailSender;
     }
 
-
+    // 필요시 di 설정 변경을 위한 세터
+    public void setMailSender(MailSender mailSender) {
+        this.mailSender = mailSender;
+    }
 
     // 사용자 레벨 업그레이드 메소드
     public void upgradeLevels() throws SQLException {
@@ -66,6 +69,19 @@ public class UserService {
     protected void upgradeLevel(User user) {
         user.upgradeLevel();
         userDao.update(user);
+        sendUpgradeEmail(user);
+    }
+
+    private void sendUpgradeEmail(User user) {
+
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(user.getEmail());
+        mailMessage.setFrom("foameraserblue@gmail.com");
+        mailMessage.setSubject("Upgrade 안내");
+        mailMessage.setText("사용자님의 등급이 " + user.getLevel().name());
+
+        mailSender.send(mailMessage);
+
     }
 
     private boolean canUpgradeLevel(User user) {

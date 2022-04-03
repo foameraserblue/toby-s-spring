@@ -17,7 +17,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.sql.SQLException;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+
 public class UserDaoTest {
 
     private UserDao userDaoJdbc;
@@ -33,14 +33,12 @@ public class UserDaoTest {
 
     @Before
     public void setUp() {
-        System.out.println(context);
-        System.out.println(this);
 
         userDaoJdbc = context.getBean("userDao", UserDaoJdbc.class);
 
-        user1 = new User("아디1", "이름1", "비번1", Level.BASIC, 1, 0);
-        user2 = new User("아디2", "이름2", "비번2", Level.SILVER, 55, 10);
-        user3 = new User("아디3", "이름3", "비번3", Level.GOLD, 100, 40);
+        user1 = new User("아디1", "이름1", "비번1", Level.BASIC, 1, 0, "foameraserblue@gmail.com");
+        user2 = new User("아디2", "이름2", "비번2", Level.SILVER, 55, 10, "foameraserblue@gmail.com");
+        user3 = new User("아디3", "이름3", "비번3", Level.GOLD, 100, 40, "foameraserblue@gmail.com");
     }
 
     @Test
@@ -109,6 +107,7 @@ public class UserDaoTest {
         user1.setLevel(Level.GOLD);
         user1.setLogin(1000);
         user1.setRecommend(9999);
+        user1.setEmail("foarmeraserblue@gmail.com");
         userDaoJdbc.update(user1);
 
         User user1Update = userDaoJdbc.get(user1.getId());
@@ -126,6 +125,7 @@ public class UserDaoTest {
         Assert.assertEquals(user1.getLevel(), user2.getLevel());
         Assert.assertEquals(user1.getLogin(), user2.getLogin());
         Assert.assertEquals(user1.getRecommend(), user2.getRecommend());
+        Assert.assertEquals(user1.getEmail(), user2.getEmail());
 
     }
 
