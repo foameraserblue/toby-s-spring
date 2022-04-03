@@ -5,6 +5,7 @@ import com.foameraserblue.service.UserService;
 import com.foameraserblue.service.UserServiceImpl;
 import com.foameraserblue.service.UserServiceTx;
 import mock.MockMailSender;
+import mock.MockUserDao;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -82,22 +83,25 @@ public class UserServiceTest {
     @Test
     @DirtiesContext // 컨텍스트의 di 를 변경하는 테스트라는 의미
     public void upgradeLevels() throws SQLException {
-        userDao.deleteAll();
-        for (User user : users) userDao.add(user);
-
-        // 필요한 mock 객체로 di 객체를 변경해준다
+        // 가짜 DAO 객체
+        MockUserDao mockUserDao = new MockUserDao(this.users);
+        // 가짜 MailSender 객체
         MockMailSender mockMailSender = new MockMailSender();
-        userServiceImpl.setMailSender(mockMailSender);
+        // 고립된 테스트에서는 테스트 오브젝트를 직접 생성해준다
+        // 고립된 테스트에서는 독립적으로 동작하는 대상을 사용하기 때문에 Bean 을 통해 DI 받을 필요가 없다
+        UserServiceImpl userServiceImpl = new UserServiceImpl(mockUserDao, mockMailSender);
 
+        // 비지니스 로직 실행
+        userServiceImpl.upgradeLevels();
 
-        userService.upgradeLevels();
+        // 실행된 로직을 검증할 mock 객체에서 출력내역 확인
+        List<User> updated = mockUserDao.getUpdated();
 
-        checkLevelUpgraded(users.get(0), false);
-        checkLevelUpgraded(users.get(1), true);
-        checkLevelUpgraded(users.get(2), false);
-        checkLevelUpgraded(users.get(3), true);
-        checkLevelUpgraded(users.get(4), false);
+        Assert.assertEquals(updated.size(), 2);
+        checkUserAndLevel(updated.get(0), "2번아디", Level.SILVER);
+        checkUserAndLevel(updated.get(1), "4번아디", Level.GOLD);
 
+        // 메일 발송 내역 확인
         List<String> request = mockMailSender.getRequest();
         assertEquals(request.size(), 2);
         assertEquals(request.get(0), users.get(1).getEmail());
@@ -142,6 +146,11 @@ public class UserServiceTest {
         }
 
         checkLevelUpgraded(users.get(1), false);
+    }
+
+    private void checkUserAndLevel(User updated, String expectedId, Level expectedLevel) {
+        Assert.assertEquals(updated.getId(), expectedId);
+        Assert.assertEquals(updated.getLevel(), expectedLevel);
     }
 
 
