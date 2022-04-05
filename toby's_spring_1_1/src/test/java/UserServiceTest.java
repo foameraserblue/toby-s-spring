@@ -1,9 +1,7 @@
 import com.foameraserblue.dao.UserDao;
 import com.foameraserblue.domain.Level;
 import com.foameraserblue.domain.User;
-import com.foameraserblue.service.UserService;
-import com.foameraserblue.service.UserServiceImpl;
-import com.foameraserblue.service.UserServiceTx;
+import com.foameraserblue.service.*;
 import mock.MockMailSender;
 import mock.MockUserDao;
 import org.junit.Assert;
@@ -20,6 +18,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import testFactory.TestFactory;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Proxy;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -36,6 +35,7 @@ public class UserServiceTest {
     UserServiceImpl userServiceImpl;
     UserDao userDao;
     DataSource dataSource;
+    PlatformTransactionManager transactionManager;
     private static ApplicationContext context;
 
     List<User> users;
@@ -52,6 +52,7 @@ public class UserServiceTest {
         userServiceImpl = context.getBean("userServiceImpl", UserServiceImpl.class);
         userDao = context.getBean("userDao", UserDao.class);
         dataSource = context.getBean("dataSource", DataSource.class);
+        transactionManager = context.getBean("transactionManager", PlatformTransactionManager.class);
 
         users = Arrays.asList(
                 new User("1번아디", "1번이름", "1ps", Level.BASIC, MIN_LOGCOUNT_FOR_SILVER - 1, 0, "foameraserblue@gmail.com"),
@@ -133,17 +134,25 @@ public class UserServiceTest {
     }
 
     @Test
-    public void upgradeAllOrNothing() {
+    @DirtiesContext
+    public void upgradeAllOrNothing() throws Exception {
+
+        // 테스트를 위해 팩토리 빈 자체를 직접 가져와줌
+        TxProxyFactoryBean txProxyFactoryBean =
+                context.getBean("&userService", TxProxyFactoryBean.class);
+
         UserService testUserService = new TestUserService(userDao, context.getBean("mailSender", MailSender.class), users.get(3).getId());
 
-        UserServiceTx userServiceTx = new UserServiceTx(testUserService, context.getBean("transactionManager", PlatformTransactionManager.class));
+        txProxyFactoryBean.setTarget(testUserService);
+
+        UserService txUserService = (UserService) txProxyFactoryBean.getObject();
 
 
         userDao.deleteAll();
         for (User user : users) userDao.add(user);
 
         try {
-            userServiceTx.upgradeLevels();
+            txUserService.upgradeLevels();
             fail("TestUserServiceException expected");
         } catch (TestUserServiceException | SQLException e) {
 

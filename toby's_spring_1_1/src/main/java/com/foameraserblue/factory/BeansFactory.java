@@ -3,6 +3,7 @@ package com.foameraserblue.factory;
 import com.foameraserblue.connection.ConnectionMaker;
 import com.foameraserblue.connection.MysqlConnection;
 import com.foameraserblue.dao.UserDaoJdbc;
+import com.foameraserblue.service.TxProxyFactoryBean;
 import com.foameraserblue.service.UserService;
 import com.foameraserblue.service.UserServiceImpl;
 import com.foameraserblue.service.UserServiceTx;
@@ -70,8 +71,8 @@ public class BeansFactory {
     }
 
     @Bean
-    public UserService userService(){
-        return new UserServiceTx(userServiceImpl(),transactionManager());
+    public TxProxyFactoryBean userService() {
+        return new TxProxyFactoryBean(userServiceImpl(), transactionManager(), "upgradeLevels", UserService.class);
     }
 
     @Bean
