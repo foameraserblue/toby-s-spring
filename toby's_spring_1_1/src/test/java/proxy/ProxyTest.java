@@ -2,11 +2,8 @@ package proxy;
 
 import dynamicproxy.Hello;
 import dynamicproxy.HelloTarget;
-import dynamicproxy.UppercaseAdvice;
 import dynamicproxy.UppercaseHandler;
-import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.aop.framework.ProxyFactoryBean;
 
 import java.lang.reflect.Proxy;
 
@@ -25,18 +22,5 @@ public class ProxyTest {
         );
 
         System.out.println(proxiedHello.sayHello("지우개"));
-    }
-
-    @Test
-    public void proxyFactoryBean(){
-        ProxyFactoryBean pfBean = new ProxyFactoryBean();
-        pfBean.setTarget(new HelloTarget());
-        pfBean.addAdvice(new UppercaseAdvice());
-
-        Hello helloProxy = (Hello) pfBean.getObject();
-
-        Assert.assertEquals(helloProxy.sayHello("eraser"),"HELLO ERASER");
-        Assert.assertEquals(helloProxy.sayHi("eraser"),"HI ERASER");
-        Assert.assertEquals(helloProxy.sayThankYou("eraser"),"THANK YOU ERASER");
     }
 }
