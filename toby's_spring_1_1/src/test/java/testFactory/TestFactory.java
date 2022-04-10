@@ -3,11 +3,12 @@ package testFactory;
 import com.foameraserblue.connection.ConnectionMaker;
 import com.foameraserblue.connection.MysqlConnection;
 import com.foameraserblue.dao.UserDaoJdbc;
-import com.foameraserblue.service.TxProxyFactoryBean;
-import com.foameraserblue.service.UserService;
-import com.foameraserblue.service.UserServiceImpl;
-import com.foameraserblue.service.UserServiceTx;
+import com.foameraserblue.service.*;
 import mock.DummyMailSender;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.aop.support.NameMatchMethodPointcut;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -67,13 +68,46 @@ public class TestFactory {
         return new UserServiceImpl(userDao(), mailSender());
     }
 
+    // 프록시 팩토리 빈, 빈으로 등록
     @Bean
-    public TxProxyFactoryBean userService() {
-        return new TxProxyFactoryBean(userServiceImpl(), transactionManager(), "upgradeLevels", UserService.class);
+    public ProxyFactoryBean userService() {
+        ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+        proxyFactoryBean.setTarget(userServiceImpl());
+
+        String[] adviseAndAdvisor = {"transactionAdvisor"};
+        // 여러개의 어드바이서를 등록할 수 있다.
+        proxyFactoryBean.setInterceptorNames(adviseAndAdvisor);
+
+        return proxyFactoryBean;
     }
+
+//    @Bean
+//    public TxProxyFactoryBean userService() {
+//        return new TxProxyFactoryBean(userServiceImpl(), transactionManager(), "upgradeLevels", UserService.class);
+//    }
 
     @Bean
     public MailSender mailSender() {
         return new DummyMailSender();
+    }
+
+    // 어드바이스 빈 등록
+    @Bean
+    public MethodInterceptor transactionAdvise() {
+        return new TransactionAdvice(transactionManager());
+    }
+
+    // 포인트컷 빈 등록
+    @Bean
+    public NameMatchMethodPointcut transactionPointcut() {
+        NameMatchMethodPointcut namePointcut = new NameMatchMethodPointcut();
+        namePointcut.setMappedName("upgrade*");
+        return namePointcut;
+    }
+
+    // 어드바이서 빈 등록
+    @Bean
+    public DefaultPointcutAdvisor transactionAdvisor() {
+        return new DefaultPointcutAdvisor(transactionPointcut(), transactionAdvise());
     }
 }
