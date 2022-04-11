@@ -35,7 +35,8 @@ public class UserServiceImpl implements UserService {
 
     // 사용자 레벨 업그레이드 메소드
     // 서비스단의 비즈니스 로직에만 집중한 깔끔한 코드로 다시 돌아옴
-    public void upgradeLevels() throws SQLException {
+    public void upgradeLevels() {
+        System.out.println("service");
         List<User> users = userDao.getAll();
 
         for (User user : users) {
@@ -54,6 +55,7 @@ public class UserServiceImpl implements UserService {
     }
 
     protected void upgradeLevel(User user) {
+        System.out.println("부모 업그레이드레벨");
         user.upgradeLevel();
         userDao.update(user);
         sendUpgradeEmail(user);

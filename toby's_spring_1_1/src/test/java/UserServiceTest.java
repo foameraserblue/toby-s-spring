@@ -1,15 +1,13 @@
 import com.foameraserblue.dao.UserDao;
 import com.foameraserblue.domain.Level;
 import com.foameraserblue.domain.User;
-import com.foameraserblue.service.*;
-import mock.MockMailSender;
-import mock.MockUserDao;
+import com.foameraserblue.service.UserService;
+import com.foameraserblue.service.UserServiceImpl;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.mail.MailSender;
@@ -17,26 +15,26 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.PlatformTransactionManager;
 import testFactory.TestFactory;
+import testclass.TestUserServiceImpl;
 
 import javax.sql.DataSource;
-import java.lang.reflect.Proxy;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
 import static com.foameraserblue.service.UserServiceImpl.MIN_LOGCOUNT_FOR_SILVER;
 import static com.foameraserblue.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
-import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.fail;
 import static org.mockito.Mockito.*;
 
 public class UserServiceTest {
 
     UserService userService;
-    UserServiceImpl userServiceImpl;
+    //    UserServiceImpl userServiceImpl;
     UserDao userDao;
     DataSource dataSource;
     PlatformTransactionManager transactionManager;
+    UserService testUserService;
     private static ApplicationContext context;
 
     List<User> users;
@@ -50,10 +48,11 @@ public class UserServiceTest {
     @Before
     public void setUp() {
         userService = context.getBean("userService", UserService.class);
-        userServiceImpl = context.getBean("userServiceImpl", UserServiceImpl.class);
+//        userServiceImpl = context.getBean("userServiceImpl", UserServiceImpl.class);
         userDao = context.getBean("userDao", UserDao.class);
         dataSource = context.getBean("dataSource", DataSource.class);
         transactionManager = context.getBean("transactionManager", PlatformTransactionManager.class);
+        testUserService = context.getBean("testUserService", UserService.class);
 
         users = Arrays.asList(
                 new User("1번아디", "1번이름", "1ps", Level.BASIC, MIN_LOGCOUNT_FOR_SILVER - 1, 0, "foameraserblue@gmail.com"),
@@ -62,26 +61,6 @@ public class UserServiceTest {
                 new User("4번아디", "4번이름", "4ps", Level.SILVER, MIN_LOGCOUNT_FOR_SILVER + 10, MIN_RECCOMEND_FOR_GOLD, "foameraserblue@gmail.com"),
                 new User("5번아디", "5번이름", "5ps", Level.GOLD, MIN_LOGCOUNT_FOR_SILVER + 50, Integer.MAX_VALUE, "foameraserblue@gmail.com")
         );
-    }
-
-    // 테스트를 위한 가짜객체
-    static class TestUserService extends UserServiceImpl {
-        private String id; // 예외를 발생시킬 인덱스
-
-        public TestUserService(UserDao userDao, MailSender mailSender, String id) {
-            super(userDao, mailSender);
-            this.id = id;
-        }
-
-        @Override
-        protected void upgradeLevel(User user) {
-            if (user.getId().equals(this.id)) throw new TestUserServiceException();
-            super.upgradeLevel(user);
-        }
-    }
-
-    // 테스트를 위한 가짜 exception
-    public static class TestUserServiceException extends RuntimeException {
     }
 
 
@@ -135,32 +114,39 @@ public class UserServiceTest {
     }
 
     @Test
-    @DirtiesContext
-    public void upgradeAllOrNothing() throws Exception {
-
-        // 테스트를 위해 팩토리 빈 자체를 직접 가져와줌
-        ProxyFactoryBean txProxyFactoryBean =
-                context.getBean("&userService", ProxyFactoryBean.class);
-
-        UserService testUserService = new TestUserService(userDao, context.getBean("mailSender", MailSender.class), users.get(3).getId());
-
-        txProxyFactoryBean.setTarget(testUserService);
-
-        UserService txUserService = (UserService) txProxyFactoryBean.getObject();
+    public void upgradeAllOrNothing() throws SQLException {
 
 
         userDao.deleteAll();
         for (User user : users) userDao.add(user);
 
         try {
-            txUserService.upgradeLevels();
+            testUserService.upgradeLevels();
             fail("TestUserServiceException expected");
-        } catch (TestUserServiceException | SQLException e) {
+        } catch (TestUserServiceImpl.TestUserServiceException ignored) {
 
         }
 
         checkLevelUpgraded(users.get(1), false);
     }
+
+//    // 테스트를 위한 가짜객체
+//    public static class TestUserServiceImpl extends UserServiceImpl {
+//        private String id = "3번아디"; // 예외를 발생시킬 인덱스
+//
+//        public TestUserServiceImpl(UserDao userDao, MailSender mailSender) {
+//            super(userDao, mailSender);
+//
+//        }
+//
+//        @Override
+//        protected void upgradeLevel(User user) {
+//            if (user.getId().equals(this.id)) throw new TestUserServiceException();
+//            super.upgradeLevel(user);
+//        }
+//    }
+//
+
 
     private void checkUserAndLevel(User updated, String expectedId, Level expectedLevel) {
         Assert.assertEquals(updated.getId(), expectedId);
@@ -177,9 +163,9 @@ public class UserServiceTest {
         User userUpdate = userDao.get(user.getId());
 
         if (upgraded) {
-            Assert.assertEquals(userUpdate.getLevel(), user.getLevel().nextLevel());
+            Assert.assertEquals(user.getLevel().nextLevel(), userUpdate.getLevel());
         } else {
-            Assert.assertEquals(userUpdate.getLevel(), user.getLevel());
+            Assert.assertEquals(user.getLevel(), userUpdate.getLevel());
         }
     }
 

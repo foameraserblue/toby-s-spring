@@ -1,4 +1,4 @@
-package com.foameraserblue.service;
+package com.foameraserblue.aop;
 
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -20,6 +20,7 @@ public class TransactionAdvice implements MethodInterceptor {
     // 이덕분에 어드바이스는 특정 타겟 객체에 의존하지 않고 사용이 가능함 ( 타겟 객체가 어떤건지 알 필요가없음 )
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
+        System.out.println("어드바이스");
         TransactionStatus status = this.transactionManager.getTransaction(
                 new DefaultTransactionDefinition()
         );
@@ -31,6 +32,7 @@ public class TransactionAdvice implements MethodInterceptor {
             this.transactionManager.commit(status);
             return ret;
         } catch (RuntimeException e) {
+            System.out.println("롤백");
             this.transactionManager.rollback(status);
             throw e;
         }

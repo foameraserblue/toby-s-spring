@@ -29,9 +29,10 @@ public class UserServiceTx implements UserService {
     }
 
     @Override
-    public void upgradeLevels() throws SQLException {
+    public void upgradeLevels(){
         TransactionStatus status = this.transactionManager
                 .getTransaction(new DefaultTransactionDefinition());
+
         try {
             // 비즈니스 로직은, 비지니스 로직 구현체에게 기능을 위임한다
             userService.upgradeLevels();

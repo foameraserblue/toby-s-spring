@@ -1,12 +1,14 @@
 package com.foameraserblue.factory;
 
+import com.foameraserblue.aop.NameMatchClassMethodPointcut;
+import com.foameraserblue.aop.TransactionAdvice;
 import com.foameraserblue.connection.ConnectionMaker;
 import com.foameraserblue.connection.MysqlConnection;
 import com.foameraserblue.dao.UserDaoJdbc;
 import com.foameraserblue.service.*;
 import org.aopalliance.intercept.MethodInterceptor;
-import org.springframework.aop.Pointcut;
 import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.NameMatchMethodPointcut;
 import org.springframework.context.annotation.Bean;
@@ -67,23 +69,23 @@ public class BeansFactory {
     }
 
     @Bean
-    public UserService userServiceImpl() {
+    public UserServiceImpl userService() {
 
         return new UserServiceImpl(userDao(), mailSender());
     }
 
-    // 프록시 팩토리 빈, 빈으로 등록
-    @Bean
-    public ProxyFactoryBean userService() {
-        ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
-        proxyFactoryBean.setTarget(userServiceImpl());
-
-        String[] adviseAndAdvisor = {"transactionAdvisor"};
-        // 여러개의 어드바이서를 등록할 수 있다.
-        proxyFactoryBean.setInterceptorNames(adviseAndAdvisor);
-
-        return proxyFactoryBean;
-    }
+//    // 프록시 팩토리 빈, 빈으로 등록
+//    @Bean
+//    public ProxyFactoryBean userService() {
+//        ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+//        proxyFactoryBean.setTarget(userServiceImpl());
+//
+//        String[] adviseAndAdvisor = {"transactionAdvisor"};
+//        // 여러개의 어드바이서를 등록할 수 있다.
+//        proxyFactoryBean.setInterceptorNames(adviseAndAdvisor);
+//
+//        return proxyFactoryBean;
+//    }
 
 //    @Bean
 //    public TxProxyFactoryBean userService() {
@@ -105,9 +107,10 @@ public class BeansFactory {
 
     // 포인트컷 빈 등록
     @Bean
-    public NameMatchMethodPointcut transactionPointcut() {
-        NameMatchMethodPointcut namePointcut = new NameMatchMethodPointcut();
-        namePointcut.setMappedName("upgrade*");
+    public NameMatchClassMethodPointcut transactionPointcut() {
+        NameMatchClassMethodPointcut namePointcut = new NameMatchClassMethodPointcut();
+        namePointcut.setMappedName("upgrade*"); // 메소드 이름 패턴
+        namePointcut.setMappedClassName("*ServiceImpl"); // 클래스 이름 패턴
         return namePointcut;
     }
 
@@ -115,6 +118,11 @@ public class BeansFactory {
     @Bean
     public DefaultPointcutAdvisor transactionAdvisor() {
         return new DefaultPointcutAdvisor(transactionPointcut(), transactionAdvise());
+    }
+
+    @Bean
+    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator() {
+        return new DefaultAdvisorAutoProxyCreator();
     }
 
 
