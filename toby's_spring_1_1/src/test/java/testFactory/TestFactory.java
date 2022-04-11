@@ -8,6 +8,7 @@ import com.foameraserblue.dao.UserDaoJdbc;
 import com.foameraserblue.service.UserServiceImpl;
 import mock.DummyMailSender;
 import org.aopalliance.intercept.MethodInterceptor;
+import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.context.annotation.Bean;
@@ -99,14 +100,14 @@ public class TestFactory {
         return new TransactionAdvice(transactionManager());
     }
 
-    // 포인트컷 빈 등록
-    @Bean
-    public NameMatchClassMethodPointcut transactionPointcut() {
-        NameMatchClassMethodPointcut namePointcut = new NameMatchClassMethodPointcut();
-        namePointcut.setMappedName("*Levels");
-        namePointcut.setMappedClassName("*ServiceImpl");
-        return namePointcut;
-    }
+//    // 포인트컷 빈 등록
+//    @Bean
+//    public NameMatchClassMethodPointcut transactionPointcut() {
+//        NameMatchClassMethodPointcut namePointcut = new NameMatchClassMethodPointcut();
+//        namePointcut.setMappedName("*Levels");
+//        namePointcut.setMappedClassName("*ServiceImpl");
+//        return namePointcut;
+//    }
 
     // 어드바이서 빈 등록
     @Bean
@@ -122,5 +123,12 @@ public class TestFactory {
     @Bean
     public TestUserServiceImpl testUserService(){
         return new TestUserServiceImpl(userDao(),mailSender());
+    }
+
+    @Bean
+    public AspectJExpressionPointcut transactionPointcut(){
+        AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
+        pointcut.setExpression("execution(* *..*ServiceImpl.upgrade*(..))");
+        return pointcut;
     }
 }
