@@ -3,6 +3,7 @@ package springbook.user.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -18,7 +19,7 @@ public class UserDaoJdbc implements UserDao {
     }
 
     private JdbcTemplate jdbcTemplate;
-    private String sqlAdd;
+    private Map<String, String> sqlMap;
 
     private RowMapper<User> userMapper =
             new RowMapper<User>() {
@@ -35,13 +36,13 @@ public class UserDaoJdbc implements UserDao {
                 }
             };
 
-    public void setSqlAdd(String sqlAdd) {
-        this.sqlAdd = sqlAdd;
+    public void setSqlMap(Map<String, String> sqlMap) {
+        this.sqlMap = sqlMap;
     }
 
     public void add(User user) {
         this.jdbcTemplate.update(
-                this.sqlAdd,
+                this.sqlMap.get("add"),
                 user.getId(), user.getName(), user.getPassword(), user.getEmail(),
                 user.getLevel().intValue(), user.getLogin(), user.getRecommend());
     }
